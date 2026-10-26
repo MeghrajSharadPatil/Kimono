@@ -1,0 +1,6 @@
+{
+  "name": "Hanami Kimono Atelier",
+  "description": "Interactive kimono fashion design game and social showcase under a blooming pink sakura canopy, featuring custom pattern painting, traditional Japanese motifs (Sakura, Tsuru, Nami), silk fabric textures, AI-driven facial mapping, and kimono cultural heritage.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
