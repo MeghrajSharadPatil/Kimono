@@ -1,10 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { Camera, Check, Sparkles, Upload, UserCheck, X } from 'lucide-react';
+import { MARIN_HEADSHOT_URL } from '../assets/marinImages';
 import { FaceMappingConfig, KimonoConfig } from '../types/kimono';
 import { soundFX } from '../utils/soundEffects';
-
-const MARIN_HEADSHOT_URL =
-  '/src/assets/images/marin_kitagawa_headshot_closeup_1792925601205.jpg';
 
 interface AIFaceMapperPanelProps {
   config: KimonoConfig;

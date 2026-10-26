@@ -32,6 +32,7 @@ import {
   KIMONO_PATTERNS,
   TRADITIONAL_SWATCHES,
 } from './data/kimonoData';
+import { MARIN_HEADSHOT_URL, SAKURA_BACKDROP_URL } from './assets/marinImages';
 import {
   FaceMappingConfig,
   GalleryCreation,
@@ -41,10 +42,81 @@ import {
 } from './types/kimono';
 import { soundFX } from './utils/soundEffects';
 
-const SAKURA_BACKDROP_URL =
-  '/src/assets/images/sakura_tree_festival_backdrop_1792925600768.jpg';
-const MARIN_HEADSHOT_URL =
-  '/src/assets/images/marin_kitagawa_headshot_closeup_1792925601205.jpg';
+const FALLBACK_GALLERY_ITEMS: GalleryCreation[] = [
+  {
+    id: 'creation-sakura-dawn',
+    title: 'Marin’s Pink Sakura Festival Furisode',
+    designerName: 'Aoi · Tokyo',
+    inspirationNote: 'Soft pink cherry blossoms with a bright crimson butterfly bow under the sakura trees.',
+    seasonTag: 'Spring Hanami',
+    createdAt: '2 hours ago',
+    likes: 148,
+    remixes: 29,
+    config: {
+      ...DEFAULT_KIMONO_CONFIG,
+      baseColor: '#FADADD',
+      sleeveColor: '#F48FB1',
+      hemGradientColor: '#C82846',
+      obiColor: '#1D4E89',
+      patternId: 'sakura',
+    },
+  },
+  {
+    id: 'creation-tsuru-eternity',
+    title: 'Golden Crane Celebration Kimono',
+    designerName: 'Haruka · Kyoto',
+    inspirationNote: 'Lucky cranes soaring over ruby red silk and gold thread brocade.',
+    seasonTag: 'Winter Crane',
+    createdAt: '5 hours ago',
+    likes: 214,
+    remixes: 42,
+    config: {
+      ...DEFAULT_KIMONO_CONFIG,
+      baseColor: '#C82846',
+      sleeveColor: '#C82846',
+      hemGradientColor: '#901A3E',
+      obiColor: '#D4AF37',
+      patternId: 'tsuru',
+      fabricTexture: 'nishijin',
+    },
+  },
+  {
+    id: 'creation-nami-poster-tribute',
+    title: 'Sakura & Ocean Wave Ribbon Homage',
+    designerName: 'Kenji · Osaka',
+    inspirationNote: 'Inspired by our Beautiful Kimono Patterns poster—combining pink cherry blossoms and blue waves!',
+    seasonTag: 'Summer Breeze',
+    createdAt: '1 day ago',
+    likes: 186,
+    remixes: 37,
+    config: {
+      ...DEFAULT_KIMONO_CONFIG,
+      baseColor: '#FFF8FA',
+      sleeveColor: '#FADADD',
+      hemGradientColor: '#1D4E89',
+      obiColor: '#C82846',
+      patternId: 'sakura_nami_ribbon',
+    },
+  },
+  {
+    id: 'creation-azure-waves',
+    title: 'Summer Sky Ocean Wave Yukata',
+    designerName: 'Mio · Kamakura',
+    inspirationNote: 'Cool ocean blue waves paired with a sweet berry rose waist belt.',
+    seasonTag: 'Summer Breeze',
+    createdAt: '2 days ago',
+    likes: 132,
+    remixes: 19,
+    config: {
+      ...DEFAULT_KIMONO_CONFIG,
+      baseColor: '#7EC8E3',
+      sleeveColor: '#7EC8E3',
+      hemGradientColor: '#1D4E89',
+      obiColor: '#F48FB1',
+      patternId: 'nami',
+    },
+  },
+];
 
 type StudioTab = 'design_colors' | 'draw_upload' | 'ai_face';
 
@@ -118,8 +190,8 @@ export default function App() {
   const [studioTab, setStudioTab] = useState<StudioTab>('design_colors');
   const [soundMuted, setSoundMuted] = useState<boolean>(false);
 
-  // Social Gallery state
-  const [galleryItems, setGalleryItems] = useState<GalleryCreation[]>([]);
+  // Social Gallery state initialized with fallback items so static Vercel deployments always show the gallery
+  const [galleryItems, setGalleryItems] = useState<GalleryCreation[]>(FALLBACK_GALLERY_ITEMS);
   const [publishModalOpen, setPublishModalOpen] = useState<boolean>(false);
   const [publishTitle, setPublishTitle] = useState<string>('');
   const [publishDesigner, setPublishDesigner] = useState<string>('');
@@ -142,11 +214,13 @@ export default function App() {
     fetch('/api/gallery')
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data.items)) {
+        if (Array.isArray(data.items) && data.items.length > 0) {
           setGalleryItems(data.items);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Static deployment fallback (e.g. Vercel): keep FALLBACK_GALLERY_ITEMS
+      });
   }, []);
 
   const showToast = (msg: string) => {
@@ -249,34 +323,38 @@ export default function App() {
       ? kimonoCanvasRef.current.toDataURL('image/png')
       : undefined;
 
+    const localItem: GalleryCreation = {
+      id: `creation-${Date.now()}`,
+      title: publishTitle.trim(),
+      designerName: publishDesigner.trim() || 'Guest Designer',
+      inspirationNote:
+        publishNote.trim() || 'Designed for Marin under the pink sakura trees!',
+      seasonTag: 'Spring Hanami',
+      createdAt: 'Just now',
+      likes: 1,
+      remixes: 0,
+      previewDataUrl,
+      config,
+    };
+
     try {
       const res = await fetch('/api/gallery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: publishTitle.trim(),
-          designerName: publishDesigner.trim() || 'Guest Designer',
-          inspirationNote:
-            publishNote.trim() || 'Designed for Marin under the pink sakura trees!',
-          seasonTag: 'Spring Hanami',
-          previewDataUrl,
-          config,
-        }),
+        body: JSON.stringify(localItem),
       });
       const data = await res.json();
-      if (data.item) {
-        setGalleryItems((prev) => [data.item, ...prev]);
-        soundFX.playSakuraFanfare();
-        setPublishModalOpen(false);
-        setPublishTitle('');
-        setPublishNote('');
-        showToast('Shared your kimono to the Social Gallery!');
-        document.getElementById('social-gallery')?.scrollIntoView({ behavior: 'smooth' });
-      }
+      setGalleryItems((prev) => [data.item || localItem, ...prev]);
     } catch {
-      showToast('Saved creation to gallery');
+      setGalleryItems((prev) => [localItem, ...prev]);
     } finally {
+      soundFX.playSakuraFanfare();
+      setPublishModalOpen(false);
+      setPublishTitle('');
+      setPublishNote('');
       setIsPublishing(false);
+      showToast('Shared your kimono to the Social Gallery!');
+      document.getElementById('social-gallery')?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 

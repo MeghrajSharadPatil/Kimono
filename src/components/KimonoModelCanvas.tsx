@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { MARIN_FULL_MODEL_URL, MARIN_HEADSHOT_URL } from '../assets/marinImages';
 import { GarmentZone, KimonoConfig } from '../types/kimono';
-
-const MARIN_FULL_MODEL_URL =
-  '/src/assets/images/marin_kitagawa_kimono_model_1792925599707.jpg';
-const MARIN_HEADSHOT_URL =
-  '/src/assets/images/marin_kitagawa_headshot_closeup_1792925601205.jpg';
 
 interface KimonoModelCanvasProps {
   config: KimonoConfig;
